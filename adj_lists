@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+require 'set'
+require './Graph'
+
+g = Graph.new
+vertices = ['a','b','v','w','x','y','z']
+vertices.each do |x|
+  g.add_vertex(x)
+end
+#p g.vertices
+g.add_edge('v','w')
+g.add_edge('v','x')
+g.add_edge('v','y')
+g.add_edge('v','a')
+g.add_edge('z','x')
+g.add_edge('z','a')
+g.add_edge('w','b')
+#p g.edges
+p g.is_connected?
+#p g.out_edges('v')

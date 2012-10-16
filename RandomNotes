@@ -1,0 +1,162 @@
+Allen Downey's Think Complexity - problems from Chapters 2, 3 and 4,
+coming up with a solid approach to the Watts-Strogatz small worlds problem.
+Also the Josephus election problem.
+=====
+
+The implementation here is Order(V + E). The adjacency matrix approach is
+V**2, if you allocate memory for the entire matrix at the start.
+I did not code the adjacency matrix approach here.
+This approach will be poorer if there are many edges for each vertex; it will
+be more effective if there are few edges for each vertex. (sparse)
+
+add_all_edges seems inefficient, and so do many of the other methods.
+
+Exercise 2.3 talks about creating a regular graph of a given degree.
+I thought about it a lot. Degree is the number of neighbors that each vertex
+has, and a regular graph has each vertex with the same degree.
+A 0-regular graph has no edges; a 1-regular graph splits into pairs.
+So a 1-regular graph requires that V be even.
+Then, a 2-regular graph is possible for all V - I pictured it as a ring.
+A 3-regular graph requires 4 vertices, 8 vertices, 12 vertices.
+6 vertices can be done too. The condition turns out to be that k * V has
+to be even. I didn't write the algorithm to find them.
+
+Exercise 2.4 talks about random graphs with n nodes, where the probabililty
+p is that there is an edge between any two nodes. The Erdoes-Renyi model
+G(n,p) gives algorithms for generating these graphs.
+
+Section 2.4 talks about connected graphs - if there is a path from every node
+to every other node. This is not the same thing as a complete graph.
+There is a simple algorithm to check if a graph is connected. Start at any
+vertex and conduct a search (breadth-first-search) marking all the vertices
+you can reach. Then check if all vertices are marked.
+
+When you process a node, you visit it.
+
+You visit a node by marking it, so you can tell later it has been visited,
+and then visiting any unmarked vertices it is connected to. You use a queue 
+or "worklist" to keep them in order.
+
+So the algorithm is as follows:
+1) Start with any vertex and add it to the queue
+2) Remove a vertex from the queue and mark it. If it is connected to any 
+unmarked vertices, add them to the queue.
+3) If the queue is not empty, return to step 2.
+
+Section 2.5 talks about transitions in random graphs. For a given size n,
+there is a critical value of p* such that G(n,p) is unlikely to be connected
+if p < p* and very likely to be connected if p > p*.
+
+Section 2.6 talks about iterators in Python. An iterator just returns
+items in a collection one by one, using next() or peek() until you're out
+of materials.
+
+Section 2.7 talks about generators, also in Python.
+
+fifo - test for DoublyLinkedList
+DoublyLinkedList - partial implementation of DoublyLinkedList for use as a
+                   queue
+single - CircularLinkedList and Josephus algorithm. I have not used a clean
+         ADT for the linked list.
+Graph.rb - adjacency-lists representation of a Graph
+adj_lists - adjacency-lists with a test graph, and using the DoublyLinkedList
+            as a queue
+adj_lists_with_internal_queue - adjacency-lists with a test graph, and using
+      the internal Ruby array as a queue (it has a shift to do a pop from the
+      front)
+random - random graph Erdoes-Renyi G(n,p), an attempt to manually look for
+       the percolation point, but I haven't found it to be easy going.
+
+================= 10-15-2012 ============
+In a graph, a clique is a subset of nodes who are all connected to each other.
+Watts and Strogatz [WS] defined a clustering coefficient that quantifies the
+likelihood that two nodes that are connected to the same node are also 
+connected to each other.
+
+Characteristic Path length (L) is a measure of the average distance between 
+two nodes. Or, the typical separation between two nodes.
+It corresponds to the degrees of separation in a social network.
+
+Regular graphs have high clustering and (small) path lengths  (right?)
+Random graphs of the same size have low clustering and (high?) path lengths
+The book has (high, high) and (low, low) which I don't understand.
+
+I think their picture of a regular graph is a ring lattice, where you have
+a small number of nearest neighbors, and it might be a long trip to get
+to the "other side". In that case the clustering is high and the path length
+is longer. Then a random graph would have little clustering, but I have some
+trouble picturing the path length as being low. Why wouldn't it be large?
+
+[WS] wanted to create a generative model - where you can tweak a parameter
+and get the observed phenomenon. They use an "average degree k" which is the
+number of nearest neighbors that a vertex has. They wanted to generate 
+small-world graphs, which have high clustering and low path lengths.
+
+[WS] start with a ring lattice, with n nodes and degree k. This is composed
+in the following way. For N nodes, start with 1, and for k=4, add 1-2 and 1-3.
+Then add 2-3 and 2-4. Then, add 3-4 and 3-5, and 4-5 and 4-6. Notice that you
+now have 3-1, 3-2, 3-4, and 3-5. Continue to N.
+
+======== [WS] Notes =========
+For n = 1000, k = 40, I get the following:
+C is 1.46
+L = 6.494
+np = 1: p = 0:            C ratio = 1      L = 6.494
+np = 10000: p = 0.0001:   C ratio = 1,     L = 5.54
+np = 1000: p = 0.001:     C ratio = 0.997, L = 2.71
+np = 100: p = 0.01:       C ratio = 0.968, L = 1.622
+np = 10: p = 0.1:         C ratio = 0.783, L = 1.316
+np = 4: p = 0.25          C ratio = 0.439, L = 1.2
+np = 2: p = 0.5:          C ratio = 0.163, L = 1.113
+p = 1 (hand-coded):       C ratio = 0.054, L = 1.075
+
+For n = 1200, k = 40, p = 1, C is 1.46, L = 7.74. C ratio = 0.046,
+L = 1.11. Now in this case k/n is 0.033, and ln n/ln k is 1.92.
+
+For n = 1200, k = 40, p = 0.25, C = 1.46, L = 7.74, C ratio = 0.44,
+L = 1.24. C is still high, but L is low.
+
+L is typical separation between two vertices
+C(p) is cliquishness of typical neighborhood
+They require n >> k >> ln n >> 1 to make sure the graph stays connected.
+They say that in the limit of p => 0, L goes to n/2k, but I divided by 2
+without knowing what I was doing. For this case it is 12.5 (about right).
+C goes to 3/4, which is half of what I have.
+They say in the limit of p goes to 1, L should go to ln n/ln k. In this case
+it is 1.872. They say that C goes to k/n, which would be 0.04.
+
+The regular lattice at p = 0 is a highly clustered, large world, where
+L is large and linear with n. Typical vertices are highly separated.
+At p = 1, there is not much clustering, and L grows logarithmically with n.
+
+They say, one might suspect that large C is associated with large L, and
+small C with small L. For large C and large L it would mean the graph is
+cliquish and big. For (small C, small L), the graph isn't cliquish, and
+links can be formed easily across the whole graph.
+
+However, their main point is that there is a regime where C is large, but
+L is small. L drops really quickly, whereas C doesn't. They call this the
+small world realm. p is small, and a few "long-range edges" are introduced
+randomly, connecting vertices that would be farther apart in a random lattice.
+Each "short cut" contracts the distance between neighbors, and also
+neighborhoods, across the graph. This occurs at small p.
+An edge removed from a clustered neighborhood to make a short cut has
+a small effect on C, whereas L drops rapidly.
+
+At very small p, C is pretty constant - you don't lose a lot from loss of
+a few edges - but L is dramatically affected.
+"Highly clustered(regular), but small path length(random)"
+
+They used n = 1000, average degree of 10 edges per vertex. They normalized
+to L(0) and C(0) for regular lattices, and I am not sure I got the factors
+of 2 right.
+
+Questions remaining:
+1) Improving the algorithms in Graph.rb
+2) Try another graph with high clustering, which isn't regular.
+3) Try different rewiring - like the question I had yesterday about whether
+   you rewire a rewired edge.
+4) Downey knows that I ran Dijkstra for each node in the graph. There are
+   "all pairs shortest path" algorithms. He wonders which one is quicker.
+   Which gives better performance. Why does Dijkstra's algorithm do better
+   than the order-of-growth analysis suggests?

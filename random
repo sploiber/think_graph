@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+require './Graph'
+
+# Random graph - Erdoes/Renyi G(n,p)
+# n is the number of vertices; n_edges is the number of edges to be added
+# at random. I have a lame condition not to connect a node to itself (the graph
+# code does not worry about that).
+# I find that for n = 30, for 60 edges, p = .26 or so, with 8-9/10 likelihood
+# of being connected. I don't know what 'very likely' means.
+# 70 edges, p = .3 or so, is almost always connected.
+# Now I found something on the Web that says that 2 * N(edges) / N is a key
+# parameter, where percolation begins about 1.
+# One problem is that I am not checking whether the random numbers create
+# a pair which we've already had; and if that happens, the edge isn't added,
+# and so in that case the graph ends up with a smaller value of p.
+n = ARGV[0].to_i
+n_edges = ARGV[1].to_i
+num_connected = 0
+(1..10).each do |k|
+  g = Graph.new
+  (1..n).each { |a| g.add_vertex(a) }
+  (1..n_edges).each do |a|
+    u = rand(n)
+    v = rand(n)
+    g.add_edge(u,v)
+  end
+  p = 2.0 * g.edges.size / (n * (n-1))
+  num_connected += 1 if g.is_connected?
+  p p
+end
+p num_connected

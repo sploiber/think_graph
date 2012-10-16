@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+require './DoublyLinkedList'
+d = DoublyLinkedList.new
+d.push(1)
+d.push(2)
+d.push(3)
+d.push(4)
+d.traverse
+k = d.pop
+p k
+k = d.pop
+p k
+k = d.pop
+p k
+k = d.pop
+p k
+p d.is_empty?

@@ -1,0 +1,161 @@
+#!/usr/bin/env ruby
+require 'set'
+
+# From Think Complexity, Chapter 2 - using a Graph to explore computational
+# complexity.
+# The book is Python, and we are using Ruby here.
+
+# Link represents the linked list
+class Link
+  attr_accessor :value, :nxt
+  def initialize(value=nil,nxt=nil)
+    @value = value
+    @nxt = nxt
+  end
+end
+
+class Graph
+  # Adjacency matrix representation. Maintain an array of vertices, and
+  # a Hash of linked lists, each representing all connected nodes of a 
+  # particular vertex.
+  def initialize
+    @vertices = []
+    @adj_matrix = {}
+  end
+
+  def add_vertex(v)
+    # no benefit from using Array instead of Set here, yet
+    @vertices.push(v) unless @vertices.include? v
+  end
+
+  def add_edge(u,v)
+    append_edge(u,v)
+    append_edge(v,u)
+  end
+
+  # #4 in the book, page 13
+  def remove_edge(u,v)
+    delete_edge(u,v)
+    delete_edge(v,u)
+  end
+  # #5 in the book, page 13
+  def vertices
+    @vertices
+  end
+  # #6 in the book, page 13
+  def edges
+    r = []
+    s = []
+    @adj_matrix.each do |key, val|
+      if val != nil
+        s = [key, val.value]
+        r << s
+        z = val
+        while z.nxt != nil
+          z = z.nxt
+          r << [key, z.value]
+        end
+      end
+    end
+    r
+  end
+  # #7 in the book, page 13
+  def out_vertices(v)
+    r = []
+    if @adj_matrix[v]
+      z = @adj_matrix[v]
+      r << z.value
+      while z.nxt != nil
+        z = z.nxt
+        r << z.value
+      end
+    end
+    r
+  end
+  # #8 in the book
+  def out_edges(v)
+    r = []
+    s = []
+    @adj_matrix.each do |key, val|
+      if val != nil
+        s = [key, val.value]
+        r << s if (v == key || v == val.value)
+        z = val
+        while z.nxt != nil
+          z = z.nxt
+          r << [key, z.value] if v == key
+        end
+      end
+    end
+    r
+  end
+  def add_all_edges
+    @vertices.each_with_index do |a,i|
+      (0..(i-1)).each { |j| add_edge(@vertices[i], @vertices[j]) }
+    end
+  end
+  def is_connected?
+    # Odd that Queue is stuck in Thread. We can use Array#shift to pop off
+    # the front.
+    q = []
+    # marked list is a set
+    s = Set.new
+    # choose first one to explore with
+    q.push(@vertices[0])
+    while q.size > 0
+      z = q.shift
+      s.add z
+      out_vertices(z).each { |a| q.push(a) if not s.include? a }
+    end
+    return true if s.size == @vertices.size
+    false
+  end
+private
+  def delete_edge(x1,x2)
+    if @adj_matrix[x1]
+      z = @adj_matrix[x1]
+      if x2 == z.value and z.nxt != nil
+        @adj_matrix[x1] = @adj_matrix[x1].nxt
+      elsif x2 == z.value and z.nxt == nil
+        @adj_matrix[x1] = nil
+      else
+        while (z.nxt != nil) and (z.nxt.value != x2) do
+          z = z.nxt 
+        end
+        # Delete
+        z.nxt = z.nxt.nxt
+      end
+    end
+  end
+  def append_edge(x1,x2)
+    if not @adj_matrix[x1]
+      @adj_matrix[x1] = Link.new(x2)
+    else
+      z = @adj_matrix[x1]
+      # Either we hit the end of the list, or we hit the element we were
+      # looking for. If we hit the element, we don't need to add the edge
+      # again; if we do, we add the edge.
+      while (z.nxt != nil) and (z.nxt.value != x2)
+        z = z.nxt
+      end
+      z.nxt = Link.new(x2) if z.nxt == nil
+    end
+  end
+end
+g = Graph.new
+vertices = ['a','b','v','w','x','y','z']
+vertices.each do |x|
+  g.add_vertex(x)
+end
+#p g.vertices
+g.add_edge('v','w')
+g.add_edge('v','x')
+g.add_edge('v','y')
+g.add_edge('v','a')
+g.add_edge('z','x')
+g.add_edge('z','a')
+g.add_edge('w','b')
+#p g.edges
+#p g.out_vertices('v')
+p g.is_connected?
+#p g.out_edges('v')
